@@ -16,14 +16,14 @@ module Map (Op : Set) (sig : Op → List Sig) where
 open import AbstractBindingTree Op sig
 
 map : ∀{ℓ}{V : Set ℓ}
-   {{_ : Shiftable V}} {{_ : Quotable V}} 
+   {{_ : Shiftable V}} {{_ : Quotable V}}
    → GSubst V → ABT → ABT
 
 map-arg : ∀{ℓ}{V : Set ℓ}
-   {{_ : Shiftable V}} {{_ : Quotable V}} 
+   {{_ : Shiftable V}} {{_ : Quotable V}}
    → GSubst V → {b : Sig} →  Arg b → Arg b
 map-args : ∀{ℓ}{V : Set ℓ}
-   {{_ : Shiftable V}} {{_ : Quotable V}} 
+   {{_ : Shiftable V}} {{_ : Quotable V}}
    → GSubst V → {bs : List Sig} →  Args bs → Args bs
 map σ (` x) = “ σ x ”
 map {V} σ (op ⦅ args ⦆) = op ⦅ map-args σ args ⦆
@@ -69,7 +69,7 @@ map-map-fusion-ext {V₁ = V₁}{V₂}{V₃} (op ⦅ args ⦆) σ₂○σ₁≈�
   mmf-args {bs = []} nil σ₂○σ₁≈σ₃ = refl
   mmf-args {bs = b ∷ bs} (cons arg args) σ₂○σ₁≈σ₃ =
       cong₂ cons (mmf-arg arg σ₂○σ₁≈σ₃) (mmf-args args σ₂○σ₁≈σ₃)
-  
+
 _≃_ : ∀{ℓ}{V₁ : Set ℓ}{V₂ : Set ℓ}
         {{_ : Shiftable V₁}} {{_ : Shiftable V₂}}
         {{_ : Quotable V₁}} {{_ : Quotable V₂}}
@@ -77,7 +77,8 @@ _≃_ : ∀{ℓ}{V₁ : Set ℓ}{V₂ : Set ℓ}
 _≃_ σ₁ σ₂ = ∀ x → “ σ₁ x ” ≡ “ σ₂ x ”
 
 {- todo: generalize to map-cong to simulation -}
-map-cong : ∀{ℓ}{V₁ : Set ℓ}{V₂ : Set ℓ}
+map-cong :
+   ∀{ℓ}{V₁ : Set ℓ}{V₂ : Set ℓ}
    {{_ : Shiftable V₁}} {{_ : Shiftable V₂}}
    {{_ : Quotable V₁}} {{_ : Quotable V₂}}
    {σ₁ : GSubst V₁}{σ₂ : GSubst V₂}
@@ -85,22 +86,30 @@ map-cong : ∀{ℓ}{V₁ : Set ℓ}{V₂ : Set ℓ}
    → σ₁ ≃ σ₂
    → (∀{σ₁ : GSubst V₁}{σ₂ : GSubst V₂} → σ₁ ≃ σ₂ → ext σ₁ ≃ ext σ₂)
    → map σ₁ M ≡ map σ₂ M
+mc-arg : ∀{ℓ}{V₁ : Set ℓ}{V₂ : Set ℓ}
+   {{_ : Shiftable V₁}} {{_ : Shiftable V₂}}
+   {{_ : Quotable V₁}} {{_ : Quotable V₂}}
+   {σ₁ : GSubst V₁}{σ₂ : GSubst V₂}
+   {b} (arg : Arg b) → σ₁ ≃ σ₂
+     → (∀{σ₁ : GSubst V₁}{σ₂ : GSubst V₂} → σ₁ ≃ σ₂ → ext σ₁ ≃ ext σ₂)
+     → map-arg σ₁ arg ≡ map-arg σ₂ arg
+mc-args : ∀{ℓ}{V₁ : Set ℓ}{V₂ : Set ℓ}
+   {{_ : Shiftable V₁}} {{_ : Shiftable V₂}}
+   {{_ : Quotable V₁}} {{_ : Quotable V₂}}
+   {σ₁ : GSubst V₁}{σ₂ : GSubst V₂} {bs} (args : Args bs) → σ₁ ≃ σ₂
+     → (∀{σ₁ : GSubst V₁}{σ₂ : GSubst V₂} → σ₁ ≃ σ₂ → ext σ₁ ≃ ext σ₂)
+     → map-args σ₁ args ≡ map-args σ₂ args
 map-cong (` x) σ₁≃σ₂ mc-ext = σ₁≃σ₂ x
 map-cong (op ⦅ args ⦆) σ₁≃σ₂ mc-ext =
-  cong (_⦅_⦆ op) (mc-args args σ₁≃σ₂)
-  where
-  mc-arg : ∀{σ₁ σ₂ b} (arg : Arg b) → σ₁ ≃ σ₂
-     → map-arg σ₁ arg ≡ map-arg σ₂ arg
-  mc-args : ∀{σ₁ σ₂ bs} (args : Args bs) → σ₁ ≃ σ₂
-     → map-args σ₁ args ≡ map-args σ₂ args
-  mc-arg (ast M) σ₁≃σ₂ =
-      cong ast (map-cong M σ₁≃σ₂ mc-ext)
-  mc-arg (bind arg) σ₁≃σ₂ =
-      cong bind (mc-arg arg (mc-ext σ₁≃σ₂))
-  mc-arg (clear arg) σ₁≃σ₂ = refl
-  mc-args {bs = []} nil σ₁≃σ₂ = refl
-  mc-args {bs = b ∷ bs} (cons arg args) σ₁≃σ₂ =
-      cong₂ cons (mc-arg arg σ₁≃σ₂) (mc-args args σ₁≃σ₂)
+  cong (_⦅_⦆ op) (mc-args args σ₁≃σ₂ mc-ext) -- (mc-args args σ₁≃σ₂)
+mc-arg {σ₁ = σ₁} {σ₂} (ast M) σ₁≃σ₂ mc-ext =
+  cong ast (map-cong {σ₁ = σ₁} {σ₂} M σ₁≃σ₂ mc-ext) --(map-cong M σ₁≃σ₂ (mc-ext {?} {?}))
+mc-arg (bind arg) σ₁≃σ₂ mc-ext =
+      cong bind (mc-arg arg ((mc-ext σ₁≃σ₂)) mc-ext) -- (mc-ext σ₁≃σ₂)
+mc-arg (clear arg) σ₁≃σ₂ mc-ext = refl
+mc-args {bs = []} nil σ₁≃σ₂ mc-ext = refl
+mc-args {bs = b ∷ bs} (cons arg args) σ₁≃σ₂ mc-ext =
+      cong₂ cons (mc-arg arg σ₁≃σ₂ mc-ext) (mc-args args σ₁≃σ₂ mc-ext)
 
 _⊢_≃_ : ∀{ℓ}{V₁ : Set ℓ}{V₂ : Set ℓ}
         {{_ : Shiftable V₁}} {{_ : Shiftable V₂}}
@@ -132,25 +141,24 @@ map-cong-FV : ∀{ℓ}{V₁ : Set ℓ}{V₂ : Set ℓ}
    → map σ₁ M ≡ map σ₂ M
 map-cong-FV (` x) σ₁≃σ₂ mc-ext = σ₁≃σ₂ x refl
 map-cong-FV {V₁ = V₁}{V₂}(op ⦅ args ⦆) σ₁≃σ₂ mc-ext =
-    cong (_⦅_⦆ op) (mc-args args σ₁≃σ₂)
+    cong (_⦅_⦆ op) (mc-argsv args σ₁≃σ₂)
     where
-    mc-arg : ∀{σ₁ : GSubst V₁}{ σ₂ : GSubst V₂}{b} (arg : Arg b)
+    mc-argv : ∀{σ₁ : GSubst V₁}{ σ₂ : GSubst V₂}{b} (arg : Arg b)
        → arg ⊢ₐ σ₁ ≃ σ₂
        → map-arg σ₁ arg ≡ map-arg σ₂ arg
-    mc-args : ∀{σ₁ : GSubst V₁}{σ₂ : GSubst V₂}{bs} (args : Args bs)
+    mc-argsv : ∀{σ₁ : GSubst V₁}{σ₂ : GSubst V₂}{bs} (args : Args bs)
        → args ⊢₊ σ₁ ≃ σ₂
        → map-args σ₁ args ≡ map-args σ₂ args
-    mc-arg (ast M) σ₁≃σ₂ =
+    mc-argv (ast M) σ₁≃σ₂ =
         cong ast (map-cong-FV M σ₁≃σ₂ (λ{b}{arg} → mc-ext {b}{arg}))
-    mc-arg {σ₁}{σ₂}{b = ν b} (bind arg) σ₁≃σ₂ =
-        cong bind (mc-arg arg (mc-ext {b}{arg} σ₁≃σ₂))
-    mc-arg {σ₁}{σ₂} (clear arg) σ₁≃σ₂ = refl
-    mc-args {bs = []} nil σ₁≃σ₂ = refl
-    mc-args {σ₁}{σ₂}{bs = b ∷ bs} (cons arg args) σ₁≃σ₂ =
-        cong₂ cons (mc-arg arg G) (mc-args args H)
+    mc-argv {σ₁}{σ₂}{b = ν b} (bind arg) σ₁≃σ₂ =
+        cong bind (mc-argv arg (mc-ext {b}{arg} σ₁≃σ₂))
+    mc-argv {σ₁}{σ₂} (clear arg) σ₁≃σ₂ = refl
+    mc-argsv {bs = []} nil σ₁≃σ₂ = refl
+    mc-argsv {σ₁}{σ₂}{bs = b ∷ bs} (cons arg args) σ₁≃σ₂ =
+        cong₂ cons (mc-argv arg G) (mc-argsv args H)
         where
         G : arg ⊢ₐ σ₁ ≃ σ₂
         G x x∈arg = σ₁≃σ₂ x (inj₁ x∈arg)
         H : args ⊢₊ σ₁ ≃ σ₂
         H x x∈args = σ₁≃σ₂ x (inj₂ x∈args)
-
