@@ -44,9 +44,9 @@ _∋_⦂_ (B ∷ Γ) (suc x) A = Γ ∋ x ⦂ A
 
 <→∋x : ∀{Γ : List {a = lzero} ⊤}{x A} → x < (length Γ) → Γ ∋ x ⦂ A
 <→∋x {Γ = B ∷ Γ} {x = zero} x<Γ = refl
-<→∋x {Γ = B ∷ Γ} {x = suc x} (s≤s x<Γ) = <→∋x {Γ = Γ} x<Γ 
+<→∋x {Γ = B ∷ Γ} {x = suc x} (s≤s x<Γ) = <→∋x {Γ = Γ} x<Γ
 
-∋++ : Γ ∋ x ⦂ A  → (Δ ++ Γ) ∋ (length Δ + x) ⦂ A  
+∋++ : Γ ∋ x ⦂ A  → (Δ ++ Γ) ∋ (length Δ + x) ⦂ A
 ∋++ {Δ = []} ∋ΔΓ = ∋ΔΓ
 ∋++ {Δ = B ∷ Δ} ∋ΔΓ = ∋++ {Δ = Δ} ∋ΔΓ
 
@@ -61,3 +61,12 @@ BTypes : ∀{ℓ} → Set ℓ → List Sig → Set ℓ
 BTypes I [] = ⊤
 BTypes I (b ∷ bs) = BType I b × BTypes I bs
 
+map-BType : ∀ {ℓ I b} -> (I -> I) -> BType {ℓ} I b -> BType {ℓ} I b
+map-BTypes : ∀ {ℓ I b} -> (I -> I) -> BTypes {ℓ} I b -> BTypes {ℓ} I b
+
+map-BType {b = ■} f bt = Data.Unit.Polymorphic.tt
+map-BType {b = ν b} f (fst Data.Product., snd) = f fst Data.Product., map-BType {b = b} f snd
+map-BType {b = ∁ b} f bt = map-BType {b = b} f bt
+
+map-BTypes {b = []} f bts = _
+map-BTypes {b = x ∷ b} f (fst Data.Product., snd) = (map-BType {b = x} f fst) Data.Product., (map-BTypes f snd)
